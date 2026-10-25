@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="OI Assistant">
+  <defs>
+    <linearGradient id="oi-bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#oi-bg)"/>
+  <path d="M24 20 12 32l12 12" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40 20l12 12-12 12" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="50" r="3.5" fill="#facc15"/>
+</svg>

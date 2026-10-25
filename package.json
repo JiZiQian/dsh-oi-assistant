@@ -1,0 +1,77 @@
+{
+  "name": "dsh-oi-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DSH 桌面端 OI 助手模式：按需提供确认做法、hint、相似题与忠实题意简述，提示词可在 Settings 中编辑。",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JiZiQian/dsh-oi-assistant.git"
+  },
+  "homepage": "https://github.com/JiZiQian/dsh-oi-assistant#readme",
+  "bugs": {
+    "url": "https://github.com/JiZiQian/dsh-oi-assistant/issues"
+  },
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "projection.js",
+    "prompt.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "oi",
+    "informatics-olympiad",
+    "competitive-programming",
+    "hint",
+    "chrome-devtools",
+    "oi-assistant",
+    "信息学竞赛",
+    "OI 助手"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    },
+    "searchTerms": [
+      "OI 助手",
+      "信息学竞赛",
+      "竞赛编程",
+      "确认做法",
+      "hint",
+      "相似题目",
+      "题意简述",
+      "提示词",
+      "chrome mcp",
+      "chrome-devtools",
+      "题解"
+    ]
+  }
+}
