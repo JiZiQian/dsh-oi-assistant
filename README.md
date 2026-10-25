@@ -19,7 +19,7 @@ DSH 桌面端 OI 助手模式插件。开启后，Agent 会以信息学竞赛选
 桌面端 `desktop` profile 由 Electron 独占管理，不能用 CLI 直接改配置。先在本地准备仓库：
 
 ```bash
-git clone https://github.com/JiZiQian/dsh-oi-assistant.git
+git clone git@github.com:JiZiQian/dsh-oi-assistant.git
 cd dsh-oi-assistant
 ```
 
