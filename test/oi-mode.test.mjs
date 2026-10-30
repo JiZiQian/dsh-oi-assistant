@@ -119,6 +119,9 @@ test('prompt models capabilities as parallel, on-demand tools', () => {
   assert.match(OI_SYSTEM_PROMPT, /提供 hint/)
   assert.match(OI_SYSTEM_PROMPT, /寻找相似题目/)
   assert.match(OI_SYSTEM_PROMPT, /简述题意/)
+  assert.match(OI_SYSTEM_PROMPT, /回复尽量简短/)
+  assert.match(OI_SYSTEM_PROMPT, /回复 \*\*人话\*\*/)
+  assert.match(OI_SYSTEM_PROMPT, /指代明确/)
   assert.doesNotMatch(OI_SYSTEM_PROMPT, /先确认做法/)
 })
 
@@ -159,6 +162,8 @@ test('bundle manifest declares the patch, client, files, and no npm dependencies
   assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-conversation'))
   assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-api-remotes'))
   assert.equal(pkg.dependencies, undefined)
+  assert.deepEqual(pkg.peerDependencies, { '@deepseek-ai/schemastery': '*' })
+  assert.equal(pkg.peerDependenciesMeta['@deepseek-ai/schemastery'].optional, true)
   assert.ok(pkg.files.includes('projection.js'))
   assert.ok(pkg.files.includes('prompt.js'))
   assert.ok(pkg.files.includes('client.js'))
@@ -170,7 +175,7 @@ test('patch inserts the oi-assistant row under the package', () => {
   assert.match(patch, /name: dsh-oi-assistant/)
 })
 
-test('host source wires projection, prompt, command, and settings policy', () => {
+test('host source wires projection, prompt, command, and cross-runtime schema loading', () => {
   const source = read('index.js')
   assert.match(source, /sessionProjections\.register\(oiProjection\)/)
   assert.match(source, /name: 'oi:policy'/)
@@ -180,6 +185,10 @@ test('host source wires projection, prompt, command, and settings policy', () =>
   assert.match(source, /name: OI_COMMAND/)
   assert.match(source, /usage: \/oi|用法：\/oi/)
   assert.match(source, /prompt: z\.string\(\)\.min\(1\)\.default\(OI_SYSTEM_PROMPT\)\.volatile\(\)/)
+  assert.match(source, /process\.argv\[1\]/)
+  assert.match(source, /process\.resourcesPath/)
+  assert.match(source, /app\.asar/)
+  assert.doesNotMatch(source, /runs inside the DSH desktop app/)
 })
 
 test('client source mounts the Settings section and composer chip', () => {
@@ -208,4 +217,6 @@ test('locale metadata, icon, and README exist', () => {
   assert.match(read('icon.svg'), /<svg/)
   assert.match(read('README.md'), /OI 助手提示词/)
   assert.match(read('README.md'), /Settings/)
+  assert.match(read('README.md'), /桌面端与 Web 端/)
+  assert.match(read('README.md'), /dsh plugin --profile web add/)
 })

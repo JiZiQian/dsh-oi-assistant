@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "OI Assistant",
-    "description": "On-demand approach review, hints, similar problems, and faithful statement summaries, with an editable system prompt in Settings."
+    "description": "OI assistant for both the desktop app and the Web client: on-demand approach review, hints, similar problems, and faithful statement summaries, with an editable system prompt in Settings."
   }
 }

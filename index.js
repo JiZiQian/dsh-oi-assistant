@@ -9,7 +9,7 @@
  */
 
 import { createRequire } from 'node:module'
-import { join } from 'node:path'
+import { join, resolve as resolvePath } from 'node:path'
 
 import { OI_SYSTEM_PROMPT } from './prompt.js'
 import { OI_COMMAND, oiProjection, targetOf } from './projection.js'
@@ -17,30 +17,83 @@ import { OI_COMMAND, oiProjection, targetOf } from './projection.js'
 const require = createRequire(import.meta.url)
 
 /**
+ * Create a `require` whose module lookup starts at one Host anchor.
+ *
+ * `createRequire` wants an absolute filename or a file URL; relative paths are
+ * resolved against the current working directory first.
+ *
+ * @param {string} anchor Absolute path or `file:` URL to the Host entry.
+ * @returns {NodeRequire} A require bound to that anchor.
+ */
+function requireFrom(anchor) {
+  return createRequire(anchor.startsWith('file:') ? anchor : resolvePath(anchor))
+}
+
+/**
  * Load the schema library the Host already ships.
  *
- * Local-directory installs are often linked into the profile, in which case a
- * package-local `require('@deepseek-ai/schemastery')` cannot resolve. The
- * desktop app's own copy is the same version and is the reliable fallback.
+ * Both carriers install `@deepseek-ai/schemastery` beside their own packages:
+ * the desktop app keeps it inside `app.asar`, while the web/CLI host keeps it
+ * in its installation's `node_modules`. A linked plugin normally has no copy
+ * of its own, so the first attempt relies on DSH's runtime resolution: the
+ * optional peer dependency declared in package.json routes the request to the
+ * Host copy on both carriers. The remaining attempts are explicit anchors for
+ * Host versions that do not install that routing or for unusual link layouts.
  *
  * @returns {any} schemastery's default export.
  */
 function loadSchemastery() {
-  try {
-    const loaded = require('@deepseek-ai/schemastery')
-    return loaded.default ?? loaded
-  } catch {
-    const resources = process.resourcesPath
-    if (typeof resources !== 'string' || resources === '') {
-      throw new Error(
-        'OI assistant: cannot locate @deepseek-ai/schemastery (this plugin runs inside the DSH desktop app)',
-      )
-    }
-    const loaded = require(
-      join(resources, 'app.asar', 'dsh', 'node_modules', '@deepseek-ai', 'schemastery'),
-    )
-    return loaded.default ?? loaded
+  /** @type {{ label: string, load: () => any }[]} */
+  const attempts = [
+    { label: 'plugin-local resolution', load: () => require('@deepseek-ai/schemastery') },
+  ]
+
+  // Web, headless, SDK, ACP, and other CLI profiles all start from the dsh
+  // launcher entry. Its own node_modules contains the schema library.
+  const entry = process.argv[1]
+  if (typeof entry === 'string' && entry.length > 0) {
+    attempts.push({
+      label: 'DSH launcher',
+      load: () => requireFrom(entry)('@deepseek-ai/schemastery'),
+    })
   }
+
+  // The desktop app packages the same tree inside its resources directory.
+  const resources = process.resourcesPath
+  if (typeof resources === 'string' && resources.length > 0) {
+    attempts.push({
+      label: 'desktop app resources',
+      load: () =>
+        requireFrom(join(resources, 'app.asar', 'dsh', 'package.json'))(
+          '@deepseek-ai/schemastery',
+        ),
+    })
+    attempts.push({
+      label: 'desktop app asar package',
+      load: () =>
+        require(
+          join(resources, 'app.asar', 'dsh', 'node_modules', '@deepseek-ai', 'schemastery'),
+        ),
+    })
+  }
+
+  const failures = []
+  for (const { label, load } of attempts) {
+    try {
+      const loaded = load()
+      const schema = loaded?.default ?? loaded
+      if (schema !== undefined) return schema
+      failures.push(`${label}: module has no default export`)
+    } catch (error) {
+      failures.push(`${label}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  throw new Error(
+    'OI assistant: cannot locate @deepseek-ai/schemastery. Install this plugin into a DSH ' +
+      'profile (the desktop app or `dsh web`/CLI) so it can reuse the Host copy.\n' +
+      failures.map((failure) => `- ${failure}`).join('\n'),
+  )
 }
 
 const z = loadSchemastery()

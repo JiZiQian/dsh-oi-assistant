@@ -1,6 +1,6 @@
 # dsh-oi-assistant
 
-DSH 桌面端 OI 助手模式插件。开启后，Agent 会以信息学竞赛选手/教练的身份工作，并优先使用 Chrome MCP 查题、核对链接和寻找相似题。
+DSH 桌面端与 Web 端 OI 助手模式插件。开启后，Agent 会以信息学竞赛选手/教练的身份工作，并优先使用 Chrome MCP 查题、核对链接和寻找相似题。
 
 设计重点是**并列能力，而不是固定流程**：确认做法、提供 hint、寻找相似题目、简述题意、调试、复杂度与实现等能力按需调用；用户只问一项时就只做那一项。
 
@@ -16,23 +16,35 @@ DSH 桌面端 OI 助手模式插件。开启后，Agent 会以信息学竞赛选
 
 ## 安装
 
-桌面端 `desktop` profile 由 Electron 独占管理，不能用 CLI 直接改配置。先在本地准备仓库：
+插件同时运行在 DSH 桌面端和 Web 端（`dsh web` 或浏览器访问的 Web profile）。两种形态都通过 profile 安装，Host 半区复用 DSH 自带的 `@deepseek-ai/schemastery`，不需要额外联网安装依赖。
+
+先在本地准备仓库：
 
 ```bash
 git clone git@github.com:JiZiQian/dsh-oi-assistant.git
 cd dsh-oi-assistant
 ```
 
-然后在应用内安装：
+### 桌面端与 Web GUI
 
 1. 侧边栏 **Plugins**；
 2. **Add plugin** → **Install a third-party plugin**；
 3. 选择本地目录，填入本仓库的**绝对路径**（例如克隆后的 `~/dsh_plugin/dsh-oi-assistant`；可在仓库根目录执行 `pwd` 获取）；
 4. 确认预览中的标题/描述/图标，等待安装和启用完成。
 
-本插件不声明 npm 运行时依赖。Host 侧的 `@deepseek-ai/schemastery` 从当前 DSH 桌面安装读取同版本，因此安装不需要联网；如果宿主和 app 内副本都找不到，插件会以明确错误加载失败。
+桌面端和 Web GUI 使用同一个插件页面。安装后如果 DSH 要求重启或重新加载，请按应用提示操作。
 
-安装后如果 DSH 要求重启应用，请按应用提示操作。
+### Web / CLI profile
+
+也可以直接在承载 Web 服务的机器上把插件加入 profile：
+
+```bash
+dsh plugin --profile web add /absolute/path/to/dsh-oi-assistant
+```
+
+把 `web` 换成实际使用的 profile 名称（例如 `web`、`headless`）；安装后重启或等待 HMR 重新组合。`desktop` profile 由 Electron 独占管理，请使用桌面端插件页面安装。
+
+Host 侧不声明 npm 运行时依赖。`@deepseek-ai/schemastery` 只作为 optional peer dependency 声明，用于让 DSH 的运行时解析器把请求路由到宿主自带的同版本副本：桌面端在 `app.asar` 内，Web/CLI 在 DSH 安装目录的 `node_modules` 内。解析失败时插件会以明确错误加载失败。
 
 ## 使用
 
@@ -62,7 +74,7 @@ cd dsh-oi-assistant
 - 留空并保存也会恢复默认；
 - 提示词是全局配置，对所有会话生效；保存后从下一次模型请求开始使用。
 
-如果设置页没有出现，说明 Host 的 `settings` 服务或插件的 `prompt` 配置命名空间没有被提供。先确认插件已启用；仍不可用时可修改 `prompt.js` 中的默认文本并重新加载插件。
+如果设置页没有出现，说明 Host 的 `settings` 服务或插件的 `prompt` 配置命名空间没有被提供。桌面端和 Web GUI 都提供该页面；纯 headless/CLI profile 没有 Web UI，可修改 `prompt.js` 中的默认文本并重新加载插件。
 
 ### 建议的提问方式
 
@@ -78,7 +90,8 @@ cd dsh-oi-assistant
 ## 工作原理
 
 - **Host**：注册 session projection `oi`，折叠 `/oi` 的 `command/run` / `command/done`；注册 `oi:policy` 系统提示词 section；用 `/oi` 命令提交状态；导出 volatile `prompt` 配置；通过 `settings.configure({ auto: false })` 声明自定义设置页。
-- **Client**：注册 `conversation.input.left` chip 和 `settings.section` 的“OI 助手提示词”页面；设置页使用 DSH 的 `SettingsFormModel` / `SettingsForm`，保存走 settings/config-editor。
+- **Host 跨端**：`@deepseek-ai/schemastery` 作为 optional peer dependency 声明，让 DSH 的运行时解析器把请求路由到宿主副本；加载器再依次尝试 launcher 入口和桌面 `app.asar` 锚点。桌面端与 Web/CLI 共用同一份 Host 代码，不依赖固定的桌面路径。
+- **Client**：注册 `conversation.input.left` chip 和 `settings.section` 的“OI 助手提示词”页面；设置页使用 DSH 的 `SettingsFormModel` / `SettingsForm`，保存走 settings/config-editor。桌面端（Electron 渲染进程）和浏览器 Web 端由同一套 client module system 加载同一份 `client.js`。
 - 提示词只在模式开启时注入；关闭时 section 返回空串，不占 token。
 - 模式按会话独立，新会话默认关闭，子 Agent 默认不继承。
 
@@ -87,7 +100,7 @@ cd dsh-oi-assistant
 - 提示词是全局配置，不是每个会话一份；OI 开关是每会话的。
 - 不自动安装或复制 `chrome-devtools` MCP，也不代替用户提交代码或参加比赛。
 - 不做题目数据库、评测机、自动提交或题解抓取流水线。
-- 设置页依赖 DSH 桌面端的 Settings/plugin 管理能力；纯 CLI 或没有 Settings 服务的部署只能修改 `prompt.js` 默认值。
+- 设置页依赖 DSH 的 Settings/configForms 服务；桌面端与 Web GUI 都提供。纯 headless/CLI profile 没有 Web UI，只能修改 `prompt.js` 默认值。
 - 默认提示词为中文；英文 UI 文案已提供，但提示词本身可由用户在设置中替换。
 
 ## 开发与检查

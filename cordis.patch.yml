@@ -1,4 +1,4 @@
-# dsh-oi-assistant — OI 助手模式
+# dsh-oi-assistant — OI 助手模式（桌面端 / Web 端共用）
 #
 # Host 半区：按会话的 OI 模式状态（session projection + /oi 命令）、
 # 系统提示词 section，以及可编辑的 prompt 配置。

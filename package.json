@@ -2,7 +2,7 @@
   "name": "dsh-oi-assistant",
   "version": "0.1.0",
   "private": true,
-  "description": "DSH 桌面端 OI 助手模式：按需提供确认做法、hint、相似题与忠实题意简述，提示词可在 Settings 中编辑。",
+  "description": "DSH 桌面端与 Web 端 OI 助手模式：按需提供确认做法、hint、相似题与忠实题意简述，提示词可在 Settings 中编辑。",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JiZiQian/dsh-oi-assistant.git"
@@ -45,6 +45,14 @@
   "license": "MIT",
   "engines": {
     "node": ">=20"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
   },
   "dsh": {
     "bundle": {
